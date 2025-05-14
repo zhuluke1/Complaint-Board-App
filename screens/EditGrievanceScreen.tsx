@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Alert, View } from 'react-native';
 import { useBasic } from '@basictech/expo';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Text } from 'react-native-paper';
 import GrievanceForm from '../components/GrievanceForm';
 
 export default function EditGrievanceScreen() {
@@ -10,13 +11,14 @@ export default function EditGrievanceScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { grievance } = route.params;
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (updatedGrievance) => {
     try {
+      setSubmitting(true);
       console.log('Updating grievance:', updatedGrievance);
       
       await db.from('grievances').update(grievance.id, updatedGrievance);
-      console.log('Grievance updated successfully');
       
       // Show success message
       Alert.alert(
@@ -35,8 +37,19 @@ export default function EditGrievanceScreen() {
         "Failed to update grievance. Please try again.",
         [{ text: "OK" }]
       );
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (submitting) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Updating grievance...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -53,5 +66,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   }
 });

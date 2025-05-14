@@ -40,6 +40,7 @@ export default function GrievanceForm({
   
   const [titleError, setTitleError] = useState('');
   const [descriptionError, setDescriptionError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
@@ -75,17 +76,23 @@ export default function GrievanceForm({
     return isValid;
   };
 
-  const handleSubmit = () => {
-    console.log('Submit button pressed');
+  const handleSubmit = async () => {
     if (validateForm()) {
-      console.log('Form is valid, submitting...');
-      onSubmit({
-        title,
-        description,
-        status,
-        priority,
-        category
-      });
+      setSubmitting(true);
+      try {
+        console.log('Form validated, submitting...');
+        await onSubmit({
+          title,
+          description,
+          status,
+          priority,
+          category
+        });
+      } catch (error) {
+        console.error('Error in form submission:', error);
+      } finally {
+        setSubmitting(false);
+      }
     } else {
       console.log('Form validation failed');
     }
@@ -190,6 +197,8 @@ export default function GrievanceForm({
           mode="contained" 
           onPress={handleSubmit} 
           style={styles.submitButton}
+          disabled={submitting}
+          loading={submitting}
         >
           {isEditing ? 'Update Grievance' : 'Submit Grievance'}
         </Button>

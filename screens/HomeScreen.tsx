@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, RefreshControl, Platform, useWindowDimensions } from 'react-native';
 import { FAB, ActivityIndicator, Text } from 'react-native-paper';

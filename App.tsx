@@ -14,13 +14,23 @@ import { schema } from './basic.config';
 // Create the navigation stack
 const Stack = createNativeStackNavigator();
 
+// Custom theme with primary color
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: '#2196F3',
+    secondary: '#03A9F4',
+  },
+};
+
 // Main App component - completely removed authentication
 export default function App() {
   console.log('App rendering - authentication completely removed');
   
   return (
     <BasicProvider project_id={schema.project_id} schema={schema} skipAuth={true}>
-      <PaperProvider theme={MD3LightTheme}>
+      <PaperProvider theme={theme}>
         <SafeAreaProvider>
           <NavigationContainer>
             <Stack.Navigator 

@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Alert, View } from 'react-native';
 import { useBasic } from '@basictech/expo';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator, Text } from 'react-native-paper';
 import GrievanceForm from '../components/GrievanceForm';
 
 export default function NewGrievanceScreen() {
   const { db } = useBasic();
   const navigation = useNavigation();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (grievance) => {
     try {
+      setSubmitting(true);
       console.log('Submitting grievance:', grievance);
       
       // Add createdAt timestamp
@@ -21,10 +23,7 @@ export default function NewGrievanceScreen() {
         status: 'open', // Default status for new grievances
       };
       
-      console.log('Grievance data to submit:', grievanceData);
-      
       await db.from('grievances').add(grievanceData);
-      console.log('Grievance submitted successfully');
       
       // Show success message
       Alert.alert(
@@ -43,8 +42,19 @@ export default function NewGrievanceScreen() {
         "Failed to submit grievance. Please try again.",
         [{ text: "OK" }]
       );
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (submitting) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Submitting grievance...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -62,5 +72,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   }
 });
