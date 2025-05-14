@@ -13,7 +13,10 @@ export default function EditGrievanceScreen() {
 
   const handleSubmit = async (updatedGrievance) => {
     try {
+      console.log('Updating grievance:', updatedGrievance);
+      
       await db.from('grievances').update(grievance.id, updatedGrievance);
+      console.log('Grievance updated successfully');
       
       // Show success message
       Alert.alert(

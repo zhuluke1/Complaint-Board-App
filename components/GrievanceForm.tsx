@@ -76,7 +76,9 @@ export default function GrievanceForm({
   };
 
   const handleSubmit = () => {
+    console.log('Submit button pressed');
     if (validateForm()) {
+      console.log('Form is valid, submitting...');
       onSubmit({
         title,
         description,
@@ -84,6 +86,8 @@ export default function GrievanceForm({
         priority,
         category
       });
+    } else {
+      console.log('Form validation failed');
     }
   };
 

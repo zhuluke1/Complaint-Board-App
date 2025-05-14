@@ -12,6 +12,8 @@ export default function NewGrievanceScreen() {
 
   const handleSubmit = async (grievance) => {
     try {
+      console.log('Submitting grievance:', grievance);
+      
       // Add createdAt timestamp
       const grievanceData = {
         ...grievance,
@@ -19,7 +21,10 @@ export default function NewGrievanceScreen() {
         status: 'open', // Default status for new grievances
       };
       
+      console.log('Grievance data to submit:', grievanceData);
+      
       await db.from('grievances').add(grievanceData);
+      console.log('Grievance submitted successfully');
       
       // Show success message
       Alert.alert(

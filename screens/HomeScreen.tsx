@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, RefreshControl, Platform, useWindowDimensions } from 'react-native';
 import { FAB, ActivityIndicator, Text } from 'react-native-paper';
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const [filteredGrievances, setFilteredGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     status: [],
@@ -50,9 +52,12 @@ export default function HomeScreen() {
     try {
       if (showLoading) {
         setLoading(true);
+        setError(null);
       }
       
+      console.log('Fetching grievances from database...');
       const result = await db.from('grievances').getAll();
+      console.log('Fetched grievances:', result);
       
       const formattedGrievances = result.map(item => ({
         id: item.id,
@@ -67,6 +72,7 @@ export default function HomeScreen() {
       setGrievances(formattedGrievances);
     } catch (error) {
       console.error('Error fetching grievances:', error);
+      setError('Failed to load grievances. Please try again.');
     } finally {
       if (showLoading) {
         setLoading(false);
@@ -153,8 +159,22 @@ export default function HomeScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Loading grievances...</Text>
       </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <EmptyState
+          title="Error Loading Grievances"
+          message={error}
+          icon="alert-circle-outline"
+          buttonText="Try Again"
+          onButtonPress={() => fetchGrievances()}
+        />
+      </SafeAreaView>
     );
   }
 
