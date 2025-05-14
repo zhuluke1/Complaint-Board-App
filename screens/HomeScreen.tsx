@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, RefreshControl, Platform, useWindowDimensions } from 'react-native';
-import { FAB, ActivityIndicator, Button, Text } from 'react-native-paper';
+import { FAB, ActivityIndicator, Text } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -9,7 +9,7 @@ import EmptyState from '../components/EmptyState';
 import FilterBar from '../components/FilterBar';
 
 export default function HomeScreen() {
-  const { db, isSignedIn, login, isLoading } = useBasic();
+  const { db } = useBasic();
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   
@@ -17,7 +17,6 @@ export default function HomeScreen() {
   const [filteredGrievances, setFilteredGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [authAttempted, setAuthAttempted] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     status: [],
@@ -28,49 +27,19 @@ export default function HomeScreen() {
   const isWeb = Platform.OS === 'web';
   const isWideScreen = width > 768;
 
-  // Log authentication state changes
+  // Fetch grievances on component mount
   useEffect(() => {
-    console.log('HomeScreen - Auth state changed - isSignedIn:', isSignedIn, 'isLoading:', isLoading);
-  }, [isSignedIn, isLoading]);
-
-  // Add auto-refresh functionality
-  useEffect(() => {
-    if (isSignedIn) {
-      console.log('User is signed in, fetching grievances');
-      // Initial fetch
-      fetchGrievances();
-      
-      // Set up polling every 10 seconds
-      const intervalId = setInterval(() => {
-        console.log('Auto-refreshing grievances...');
-        fetchGrievances(false); // Pass false to not show loading indicator
-      }, 10000); // 10 seconds
-      
-      // Clean up interval on unmount
-      return () => clearInterval(intervalId);
-    } else {
-      // If not signed in, stop the loading state
-      console.log('User is not signed in, stopping loading state');
-      setLoading(false);
-    }
-  }, [isSignedIn]);
-
-  // Listen for authentication messages from the popup window
-  useEffect(() => {
-    if (isWeb) {
-      const handleAuthMessage = (event) => {
-        if (event.data === 'AUTH_COMPLETE') {
-          console.log('Received AUTH_COMPLETE message in HomeScreen');
-          // Force a re-check of authentication state
-          setAuthAttempted(prev => !prev);
-        }
-      };
-
-      window.addEventListener('message', handleAuthMessage);
-      return () => {
-        window.removeEventListener('message', handleAuthMessage);
-      };
-    }
+    console.log('HomeScreen mounted, fetching grievances');
+    fetchGrievances();
+    
+    // Set up polling every 10 seconds
+    const intervalId = setInterval(() => {
+      console.log('Auto-refreshing grievances...');
+      fetchGrievances(false); // Pass false to not show loading indicator
+    }, 10000); // 10 seconds
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -154,11 +123,6 @@ export default function HomeScreen() {
     navigation.navigate('NewGrievance');
   };
 
-  const handleLogin = () => {
-    console.log('Attempting to login...');
-    login();
-  };
-
   // For web, we'll use a grid layout for wider screens
   const renderGridItem = ({ item, index }) => {
     // Calculate the correct margin based on position
@@ -185,7 +149,7 @@ export default function HomeScreen() {
     );
   };
 
-  if (isLoading || (loading && !refreshing)) {
+  if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
@@ -194,26 +158,6 @@ export default function HomeScreen() {
     );
   }
 
-  if (!isSignedIn) {
-    console.log('HomeScreen rendering login UI');
-    return (
-      <View style={styles.container}>
-        <View style={styles.authContainer}>
-          <Text style={styles.authTitle}>Grievance Board</Text>
-          <Text style={styles.authText}>Please sign in to view and manage grievances</Text>
-          <Button 
-            mode="contained" 
-            onPress={handleLogin}
-            style={styles.authButton}
-          >
-            Sign In
-          </Button>
-        </View>
-      </View>
-    );
-  }
-
-  console.log('HomeScreen rendering main UI with', grievances.length, 'grievances');
   return (
     <SafeAreaView style={styles.container}>
       <FilterBar onFilterChange={handleFilterChange} />
@@ -287,25 +231,5 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
-  },
-  authContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  authTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#2196F3',
-  },
-  authText: {
-    fontSize: 16,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  authButton: {
-    paddingHorizontal: 16,
   },
 });
