@@ -7,7 +7,20 @@ import App from './App';
 console.log('Starting Grievance Board app...');
 
 // Try both registration methods to ensure the app starts
-AppRegistry.registerComponent('main', () => App);
-registerRootComponent(App);
+try {
+  console.log('Registering app with AppRegistry...');
+  AppRegistry.registerComponent('main', () => App);
+  console.log('AppRegistry registration successful');
+} catch (error) {
+  console.error('Error registering with AppRegistry:', error);
+}
 
-console.log('Root component registered');
+try {
+  console.log('Registering app with registerRootComponent...');
+  registerRootComponent(App);
+  console.log('registerRootComponent registration successful');
+} catch (error) {
+  console.error('Error registering with registerRootComponent:', error);
+}
+
+console.log('Root component registration complete');
