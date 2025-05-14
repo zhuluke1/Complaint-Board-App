@@ -35,14 +35,42 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    .error {
+      color: red;
+      margin-top: 20px;
+      text-align: center;
+      max-width: 80%;
+    }
   </style>
+  <script>
+    // Add debugging logs
+    console.log('Loading Grievance Board web app...');
+    
+    // Handle errors
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Error:', message, source, lineno, colno, error);
+      const errorElement = document.getElementById('error-message');
+      if (errorElement) {
+        errorElement.textContent = 'Error: ' + message;
+        errorElement.style.display = 'block';
+      }
+      return false;
+    };
+  </script>
 </head>
 <body>
   <div id="root">
     <div class="loading">
       <div class="spinner"></div>
       <p>Loading Grievance Board...</p>
+      <p id="error-message" class="error" style="display: none;"></p>
     </div>
   </div>
+  <script>
+    // Add more debugging logs
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM fully loaded');
+    });
+  </script>
 </body>
 </html>

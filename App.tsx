@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, StatusBar, Platform, Linking } from 'react-native';
+import { StyleSheet, StatusBar, Platform, Linking, View, ActivityIndicator, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PaperProvider, MD3LightTheme, adaptNavigationTheme } from 'react-native-paper';
@@ -41,6 +41,16 @@ const { LightTheme } = adaptNavigationTheme({
     },
   },
 });
+
+// Loading component
+function LoadingScreen() {
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={styles.loadingText}>Loading Grievance Board...</Text>
+    </View>
+  );
+}
 
 // Main app content with navigation
 function AppContent() {
@@ -91,8 +101,7 @@ function AppContent() {
   }, [isWeb]);
 
   if (isLoading) {
-    // You could show a splash screen or loading indicator here
-    return null;
+    return <LoadingScreen />;
   }
 
   return (
@@ -147,6 +156,7 @@ function AppContent() {
 
 // Main App component
 export default function App() {
+  console.log('App rendering');
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
@@ -162,5 +172,16 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#555',
   },
 });
