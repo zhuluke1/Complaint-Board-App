@@ -17,6 +17,7 @@ export default function HomeScreen() {
   const [filteredGrievances, setFilteredGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [authAttempted, setAuthAttempted] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     status: [],
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   // Add auto-refresh functionality
   useEffect(() => {
     if (isSignedIn) {
+      console.log('User is signed in, fetching grievances');
       // Initial fetch
       fetchGrievances();
       
@@ -43,9 +45,28 @@ export default function HomeScreen() {
       return () => clearInterval(intervalId);
     } else {
       // If not signed in, stop the loading state
+      console.log('User is not signed in, stopping loading state');
       setLoading(false);
     }
   }, [isSignedIn]);
+
+  // Listen for authentication messages from the popup window
+  useEffect(() => {
+    if (isWeb) {
+      const handleAuthMessage = (event) => {
+        if (event.data === 'AUTH_COMPLETE') {
+          console.log('Received AUTH_COMPLETE message in HomeScreen');
+          // Force a re-check of authentication state
+          setAuthAttempted(prev => !prev);
+        }
+      };
+
+      window.addEventListener('message', handleAuthMessage);
+      return () => {
+        window.removeEventListener('message', handleAuthMessage);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     applyFilters();
@@ -128,6 +149,11 @@ export default function HomeScreen() {
     navigation.navigate('NewGrievance');
   };
 
+  const handleLogin = () => {
+    console.log('Attempting to login...');
+    login();
+  };
+
   // For web, we'll use a grid layout for wider screens
   const renderGridItem = ({ item, index }) => {
     // Calculate the correct margin based on position
@@ -154,10 +180,11 @@ export default function HomeScreen() {
     );
   };
 
-  if (isLoading || loading && !refreshing) {
+  if (isLoading || (loading && !refreshing)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -170,7 +197,7 @@ export default function HomeScreen() {
           <Text style={styles.authText}>Please sign in to view and manage grievances</Text>
           <Button 
             mode="contained" 
-            onPress={login}
+            onPress={handleLogin}
             style={styles.authButton}
           >
             Sign In
@@ -233,6 +260,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   listContent: {
     paddingVertical: 8,

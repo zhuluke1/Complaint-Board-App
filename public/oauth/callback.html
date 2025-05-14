@@ -43,36 +43,99 @@
       cursor: pointer;
       font-size: 16px;
     }
+    .success-icon {
+      color: #4CAF50;
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    #status {
+      margin-top: 20px;
+      font-style: italic;
+      color: #666;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="success-icon">✓</div>
     <h1>Authentication Complete</h1>
-    <p>You have successfully authenticated.</p>
+    <p>You have successfully signed in to the Grievance Board.</p>
     <p>You can now close this window and return to the application.</p>
-    <button class="button" onclick="window.close()">Close Window</button>
-    <button class="button" onclick="window.location.href = '/'">Return to App</button>
+    <button class="button" id="closeButton" onclick="closeWindow()">Close Window</button>
+    <button class="button" id="returnButton" onclick="returnToApp()">Return to App</button>
+    <p id="status"></p>
   </div>
 
   <script>
     console.log('OAuth callback page loaded');
     
-    // Try to communicate with the opener window
-    if (window.opener) {
-      try {
-        window.opener.postMessage('AUTH_COMPLETE', '*');
-        console.log('Sent AUTH_COMPLETE message to opener');
-      } catch (error) {
-        console.error('Error sending message to opener:', error);
+    function updateStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+    
+    function closeWindow() {
+      updateStatus('Closing window...');
+      // First, try to communicate with the opener window
+      if (window.opener) {
+        try {
+          window.opener.postMessage('AUTH_COMPLETE', '*');
+          console.log('Sent AUTH_COMPLETE message to opener');
+          updateStatus('Authentication message sent. Closing window...');
+          
+          // Close this window after a short delay
+          setTimeout(function() {
+            window.close();
+            // If window.close() doesn't work (which can happen in some browsers),
+            // redirect to the main app
+            setTimeout(function() {
+              updateStatus('Unable to close window automatically. Redirecting...');
+              window.location.href = '/';
+            }, 1000);
+          }, 1000);
+        } catch (error) {
+          console.error('Error sending message to opener:', error);
+          updateStatus('Error communicating with main app. Redirecting...');
+          window.location.href = '/';
+        }
+      } else {
+        updateStatus('No opener window found. Redirecting...');
+        window.location.href = '/';
       }
     }
     
-    // Redirect to the main app after a short delay
-    setTimeout(function() {
-      if (!window.opener) {
-        window.location.href = '/';
+    function returnToApp() {
+      updateStatus('Returning to app...');
+      // First, try to communicate with the opener window
+      if (window.opener) {
+        try {
+          window.opener.postMessage('AUTH_COMPLETE', '*');
+          console.log('Sent AUTH_COMPLETE message to opener');
+          updateStatus('Authentication message sent. Redirecting...');
+        } catch (error) {
+          console.error('Error sending message to opener:', error);
+          updateStatus('Error communicating with main app. Redirecting anyway...');
+        }
       }
-    }, 3000);
+      
+      // Redirect to the main app
+      window.location.href = '/';
+    }
+    
+    // Try to communicate with the opener window automatically
+    window.onload = function() {
+      if (window.opener) {
+        try {
+          window.opener.postMessage('AUTH_COMPLETE', '*');
+          console.log('Sent AUTH_COMPLETE message to opener on load');
+          updateStatus('Authentication complete. You can close this window or return to the app.');
+        } catch (error) {
+          console.error('Error sending message to opener on load:', error);
+          updateStatus('Authentication complete, but there was an error communicating with the main app.');
+        }
+      } else {
+        updateStatus('Authentication complete. Please return to the app.');
+      }
+    };
   </script>
 </body>
 </html>
