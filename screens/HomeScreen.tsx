@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, RefreshControl, Platform, useWindowDimensions } from 'react-native';
-import { FAB, ActivityIndicator } from 'react-native-paper';
+import { FAB, ActivityIndicator, Button, Text } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -9,7 +9,7 @@ import EmptyState from '../components/EmptyState';
 import FilterBar from '../components/FilterBar';
 
 export default function HomeScreen() {
-  const { db, isSignedIn } = useBasic();
+  const { db, isSignedIn, login, isLoading } = useBasic();
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   
@@ -30,6 +30,9 @@ export default function HomeScreen() {
   useEffect(() => {
     if (isSignedIn) {
       fetchGrievances();
+    } else {
+      // If not signed in, stop the loading state
+      setLoading(false);
     }
   }, [isSignedIn]);
 
@@ -135,10 +138,28 @@ export default function HomeScreen() {
     );
   };
 
-  if (loading && !refreshing) {
+  if (isLoading || loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.authContainer}>
+          <Text style={styles.authTitle}>Grievance Board</Text>
+          <Text style={styles.authText}>Please sign in to view and manage grievances</Text>
+          <Button 
+            mode="contained" 
+            onPress={login}
+            style={styles.authButton}
+          >
+            Sign In
+          </Button>
+        </View>
       </View>
     );
   }
@@ -211,5 +232,25 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+  },
+  authContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  authTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#2196F3',
+  },
+  authText: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  authButton: {
+    paddingHorizontal: 16,
   },
 });
