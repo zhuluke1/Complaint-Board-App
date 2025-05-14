@@ -28,6 +28,11 @@ export default function HomeScreen() {
   const isWeb = Platform.OS === 'web';
   const isWideScreen = width > 768;
 
+  // Log authentication state changes
+  useEffect(() => {
+    console.log('HomeScreen - Auth state changed - isSignedIn:', isSignedIn, 'isLoading:', isLoading);
+  }, [isSignedIn, isLoading]);
+
   // Add auto-refresh functionality
   useEffect(() => {
     if (isSignedIn) {
@@ -190,6 +195,7 @@ export default function HomeScreen() {
   }
 
   if (!isSignedIn) {
+    console.log('HomeScreen rendering login UI');
     return (
       <View style={styles.container}>
         <View style={styles.authContainer}>
@@ -207,6 +213,7 @@ export default function HomeScreen() {
     );
   }
 
+  console.log('HomeScreen rendering main UI with', grievances.length, 'grievances');
   return (
     <SafeAreaView style={styles.container}>
       <FilterBar onFilterChange={handleFilterChange} />

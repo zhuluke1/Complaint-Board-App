@@ -26,7 +26,7 @@ function AppContent() {
         if (event.data === 'AUTH_COMPLETE') {
           console.log('Received AUTH_COMPLETE message');
           // Force a re-render to check auth state again
-          setAuthChecked(true);
+          setAuthChecked(prev => !prev);
         }
       };
 
@@ -36,6 +36,11 @@ function AppContent() {
       };
     }
   }, []);
+
+  // Log authentication state changes
+  useEffect(() => {
+    console.log('Auth state changed - isSignedIn:', isSignedIn, 'isLoading:', isLoading);
+  }, [isSignedIn, isLoading, authChecked]);
 
   if (isLoading) {
     return (
