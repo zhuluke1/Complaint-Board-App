@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Alert, Platform, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Alert, Platform, useWindowDimensions, RefreshControl } from 'react-native';
 import { Text, Card, Button, Divider, ActivityIndicator, Chip } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -21,7 +21,7 @@ const STATUS_COLORS = {
 };
 
 export default function GrievanceDetailsScreen() {
-  const { db, isSignedIn, login, isLoading: authLoading } = useBasic();
+  const { db } = useBasic();
   const navigation = useNavigation();
   const route = useRoute();
   const { grievanceId } = route.params;
@@ -36,21 +36,17 @@ export default function GrievanceDetailsScreen() {
 
   // Add auto-refresh functionality
   useEffect(() => {
-    if (isSignedIn) {
-      fetchGrievanceDetails();
-      
-      // Set up polling every 10 seconds
-      const intervalId = setInterval(() => {
-        console.log('Auto-refreshing grievance details...');
-        fetchGrievanceDetails(false); // Pass false to not show loading indicator
-      }, 10000); // 10 seconds
-      
-      // Clean up interval on unmount
-      return () => clearInterval(intervalId);
-    } else {
-      setLoading(false);
-    }
-  }, [grievanceId, isSignedIn]);
+    fetchGrievanceDetails();
+    
+    // Set up polling every 10 seconds
+    const intervalId = setInterval(() => {
+      console.log('Auto-refreshing grievance details...');
+      fetchGrievanceDetails(false); // Pass false to not show loading indicator
+    }, 10000); // 10 seconds
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
+  }, [grievanceId]);
 
   const fetchGrievanceDetails = async (showLoading = true) => {
     try {
@@ -130,28 +126,10 @@ export default function GrievanceDetailsScreen() {
     }
   };
 
-  if (authLoading || loading && !refreshing) {
+  if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (!isSignedIn) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.authContainer}>
-          <Text style={styles.authTitle}>Grievance Board</Text>
-          <Text style={styles.authText}>Please sign in to view grievance details</Text>
-          <Button 
-            mode="contained" 
-            onPress={login}
-            style={styles.authButton}
-          >
-            Sign In
-          </Button>
-        </View>
       </View>
     );
   }
@@ -175,17 +153,18 @@ export default function GrievanceDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[
-        styles.scrollContent,
-        isWeb && isWideScreen && styles.webScrollContent
-      ]} refreshControl={
-        <ScrollView refreshControl={
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWeb && isWideScreen && styles.webScrollContent
+        ]} 
+        refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
           />
-        } />
-      }>
+        }
+      >
         <Card style={[styles.card, isWeb && isWideScreen && styles.webCard]}>
           <Card.Content>
             <Text variant="headlineSmall" style={styles.title}>{grievance.title}</Text>
@@ -348,25 +327,5 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     borderColor: '#FF5252',
-  },
-  authContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  authTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#2196F3',
-  },
-  authText: {
-    fontSize: 16,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  authButton: {
-    paddingHorizontal: 16,
-  },
+  }
 });

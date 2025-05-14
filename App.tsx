@@ -14,12 +14,12 @@ import { schema } from './basic.config';
 // Create the navigation stack
 const Stack = createNativeStackNavigator();
 
-// Main App component - no authentication required
+// Main App component - completely removed authentication
 export default function App() {
-  console.log('App rendering - no authentication required');
+  console.log('App rendering - authentication completely removed');
   
   return (
-    <BasicProvider project_id={schema.project_id} schema={schema}>
+    <BasicProvider project_id={schema.project_id} schema={schema} skipAuth={true}>
       <PaperProvider theme={MD3LightTheme}>
         <SafeAreaProvider>
           <NavigationContainer>
