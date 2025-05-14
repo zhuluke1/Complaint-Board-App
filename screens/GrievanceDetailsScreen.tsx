@@ -21,7 +21,7 @@ const STATUS_COLORS = {
 };
 
 export default function GrievanceDetailsScreen() {
-  const { db } = useBasic();
+  const { db, isSignedIn, login, isLoading: authLoading } = useBasic();
   const navigation = useNavigation();
   const route = useRoute();
   const { grievanceId } = route.params;
@@ -36,17 +36,21 @@ export default function GrievanceDetailsScreen() {
 
   // Add auto-refresh functionality
   useEffect(() => {
-    fetchGrievanceDetails();
-    
-    // Set up polling every 10 seconds
-    const intervalId = setInterval(() => {
-      console.log('Auto-refreshing grievance details...');
-      fetchGrievanceDetails(false); // Pass false to not show loading indicator
-    }, 10000); // 10 seconds
-    
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
-  }, [grievanceId]);
+    if (isSignedIn) {
+      fetchGrievanceDetails();
+      
+      // Set up polling every 10 seconds
+      const intervalId = setInterval(() => {
+        console.log('Auto-refreshing grievance details...');
+        fetchGrievanceDetails(false); // Pass false to not show loading indicator
+      }, 10000); // 10 seconds
+      
+      // Clean up interval on unmount
+      return () => clearInterval(intervalId);
+    } else {
+      setLoading(false);
+    }
+  }, [grievanceId, isSignedIn]);
 
   const fetchGrievanceDetails = async (showLoading = true) => {
     try {
@@ -126,10 +130,28 @@ export default function GrievanceDetailsScreen() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.authContainer}>
+          <Text style={styles.authTitle}>Grievance Board</Text>
+          <Text style={styles.authText}>Please sign in to view grievance details</Text>
+          <Button 
+            mode="contained" 
+            onPress={login}
+            style={styles.authButton}
+          >
+            Sign In
+          </Button>
+        </View>
       </View>
     );
   }
@@ -326,5 +348,25 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     borderColor: '#FF5252',
+  },
+  authContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  authTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#2196F3',
+  },
+  authText: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  authButton: {
+    paddingHorizontal: 16,
   },
 });
