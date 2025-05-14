@@ -29,17 +29,31 @@ export default function GrievanceDetailsScreen() {
   
   const [grievance, setGrievance] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   
   const isWeb = Platform.OS === 'web';
   const isWideScreen = width > 768;
 
+  // Add auto-refresh functionality
   useEffect(() => {
     fetchGrievanceDetails();
+    
+    // Set up polling every 10 seconds
+    const intervalId = setInterval(() => {
+      console.log('Auto-refreshing grievance details...');
+      fetchGrievanceDetails(false); // Pass false to not show loading indicator
+    }, 10000); // 10 seconds
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
   }, [grievanceId]);
 
-  const fetchGrievanceDetails = async () => {
+  const fetchGrievanceDetails = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+      
       const result = await db.from('grievances').get(grievanceId);
       
       if (result) {
@@ -51,8 +65,16 @@ export default function GrievanceDetailsScreen() {
     } catch (error) {
       console.error('Error fetching grievance details:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchGrievanceDetails();
   };
 
   const handleEdit = () => {
@@ -134,7 +156,14 @@ export default function GrievanceDetailsScreen() {
       <ScrollView contentContainerStyle={[
         styles.scrollContent,
         isWeb && isWideScreen && styles.webScrollContent
-      ]}>
+      ]} refreshControl={
+        <ScrollView refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+          />
+        } />
+      }>
         <Card style={[styles.card, isWeb && isWideScreen && styles.webCard]}>
           <Card.Content>
             <Text variant="headlineSmall" style={styles.title}>{grievance.title}</Text>

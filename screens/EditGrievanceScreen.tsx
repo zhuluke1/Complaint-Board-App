@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Alert } from 'react-native';
 import { useBasic } from '@basictech/expo';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,11 +15,23 @@ export default function EditGrievanceScreen() {
     try {
       await db.from('grievances').update(grievance.id, updatedGrievance);
       
+      // Show success message
+      Alert.alert(
+        "Success",
+        "Grievance updated successfully!",
+        [{ text: "OK" }]
+      );
+      
       // Navigate back to details screen
       navigation.goBack();
     } catch (error) {
       console.error('Error updating grievance:', error);
-      // Handle error (could show an alert or error message)
+      // Show error message
+      Alert.alert(
+        "Error",
+        "Failed to update grievance. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 

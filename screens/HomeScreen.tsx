@@ -27,9 +27,20 @@ export default function HomeScreen() {
   const isWeb = Platform.OS === 'web';
   const isWideScreen = width > 768;
 
+  // Add auto-refresh functionality
   useEffect(() => {
     if (isSignedIn) {
+      // Initial fetch
       fetchGrievances();
+      
+      // Set up polling every 10 seconds
+      const intervalId = setInterval(() => {
+        console.log('Auto-refreshing grievances...');
+        fetchGrievances(false); // Pass false to not show loading indicator
+      }, 10000); // 10 seconds
+      
+      // Clean up interval on unmount
+      return () => clearInterval(intervalId);
     } else {
       // If not signed in, stop the loading state
       setLoading(false);
@@ -40,9 +51,12 @@ export default function HomeScreen() {
     applyFilters();
   }, [grievances, filters]);
 
-  const fetchGrievances = async () => {
+  const fetchGrievances = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+      
       const result = await db.from('grievances').getAll();
       
       const formattedGrievances = result.map(item => ({
@@ -59,7 +73,9 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error fetching grievances:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
       setRefreshing(false);
     }
   };
