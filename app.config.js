@@ -26,15 +26,8 @@ module.exports = {
     web: {
       favicon: "./assets/images/favicon.png",
       bundler: "metro",
-      output: "static",
-      // Define OAuth callback URLs
-      oauth: {
-        redirectUrl: "/oauth/callback.html"
-      }
     },
-    plugins: [
-      "expo-router"
-    ],
+    plugins: [],
     scheme: "grievanceboard"
   }
 };

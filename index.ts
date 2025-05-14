@@ -1,14 +1,13 @@
 import "@expo/metro-runtime";
 import { registerRootComponent } from 'expo';
-
+import { AppRegistry } from 'react-native';
 import App from './App';
 
 // Add debugging logs
 console.log('Starting Grievance Board app...');
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
+// Try both registration methods to ensure the app starts
+AppRegistry.registerComponent('main', () => App);
 registerRootComponent(App);
 
 console.log('Root component registered');
