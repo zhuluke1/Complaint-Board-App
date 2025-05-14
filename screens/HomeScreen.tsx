@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, FlatList, RefreshControl, Platform, useWindowDimensions } from 'react-native';
-import { FAB, ActivityIndicator, Text } from 'react-native-paper';
+import { FAB, ActivityIndicator, Text, Button } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -55,19 +55,51 @@ export default function HomeScreen() {
       }
       
       console.log('Fetching grievances from database...');
-      const result = await db.from('grievances').getAll();
-      console.log('Fetched grievances:', result);
       
-      const formattedGrievances = result.map(item => ({
-        id: item.id,
-        ...item.value,
-      }));
+      // Check if db is available
+      if (!db) {
+        console.error('Database connection not available');
+        setError('Database connection not available. Please try again later.');
+        return;
+      }
+      
+      // Try to get all grievances with error handling
+      let result;
+      try {
+        result = await db.from('grievances').getAll();
+        console.log('Fetched grievances:', result);
+      } catch (dbError) {
+        console.error('Error in db.from().getAll():', dbError);
+        setError('Failed to retrieve grievances. Database error.');
+        return;
+      }
+      
+      // Handle empty result
+      if (!result || !Array.isArray(result)) {
+        console.log('No grievances found or invalid result format:', result);
+        setGrievances([]);
+        return;
+      }
+      
+      // Process the results
+      const formattedGrievances = result.map(item => {
+        if (!item || !item.id || !item.value) {
+          console.warn('Invalid grievance item:', item);
+          return null;
+        }
+        return {
+          id: item.id,
+          ...item.value,
+        };
+      }).filter(Boolean); // Remove any null items
       
       // Sort by createdAt (newest first)
-      formattedGrievances.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      formattedGrievances.sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       
+      console.log('Processed grievances:', formattedGrievances);
       setGrievances(formattedGrievances);
     } catch (error) {
       console.error('Error fetching grievances:', error);
@@ -86,6 +118,12 @@ export default function HomeScreen() {
   };
 
   const applyFilters = () => {
+    if (!grievances || !Array.isArray(grievances)) {
+      console.warn('Invalid grievances array in applyFilters:', grievances);
+      setFilteredGrievances([]);
+      return;
+    }
+    
     let filtered = [...grievances];
     
     // Apply search filter
@@ -93,24 +131,24 @@ export default function HomeScreen() {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(
         item => 
-          item.title.toLowerCase().includes(searchLower) || 
-          item.description.toLowerCase().includes(searchLower)
+          (item.title && item.title.toLowerCase().includes(searchLower)) || 
+          (item.description && item.description.toLowerCase().includes(searchLower))
       );
     }
     
     // Apply status filter
     if (filters.status.length > 0) {
-      filtered = filtered.filter(item => filters.status.includes(item.status));
+      filtered = filtered.filter(item => item.status && filters.status.includes(item.status));
     }
     
     // Apply priority filter
     if (filters.priority.length > 0) {
-      filtered = filtered.filter(item => filters.priority.includes(item.priority));
+      filtered = filtered.filter(item => item.priority && filters.priority.includes(item.priority));
     }
     
     // Apply category filter
     if (filters.category.length > 0) {
-      filtered = filtered.filter(item => filters.category.includes(item.category));
+      filtered = filtered.filter(item => item.category && filters.category.includes(item.category));
     }
     
     setFilteredGrievances(filtered);
@@ -142,12 +180,12 @@ export default function HomeScreen() {
       <View style={marginStyle}>
         <GrievanceCard
           id={item.id}
-          title={item.title}
-          description={item.description}
-          status={item.status}
-          priority={item.priority}
-          category={item.category}
-          createdAt={item.createdAt}
+          title={item.title || 'Untitled'}
+          description={item.description || 'No description'}
+          status={item.status || 'open'}
+          priority={item.priority || 'medium'}
+          category={item.category || 'General'}
+          createdAt={item.createdAt || new Date().toISOString()}
           onPress={handleGrievancePress}
         />
       </View>
@@ -166,13 +204,24 @@ export default function HomeScreen() {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <EmptyState
-          title="Error Loading Grievances"
-          message={error}
-          icon="alert-circle-outline"
-          buttonText="Try Again"
-          onButtonPress={() => fetchGrievances()}
-        />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Error Loading Grievances</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
+          <Button 
+            mode="contained" 
+            onPress={() => fetchGrievances()}
+            style={styles.retryButton}
+          >
+            Try Again
+          </Button>
+          <Button 
+            mode="outlined" 
+            onPress={handleAddGrievance}
+            style={styles.addButton}
+          >
+            Add New Grievance
+          </Button>
+        </View>
       </SafeAreaView>
     );
   }
@@ -235,6 +284,30 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#FF5252',
+  },
+  errorMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+    color: '#666',
+  },
+  retryButton: {
+    marginBottom: 16,
+  },
+  addButton: {
+    marginBottom: 16,
   },
   listContent: {
     paddingVertical: 8,

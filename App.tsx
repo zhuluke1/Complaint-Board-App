@@ -27,11 +27,19 @@ const theme = {
 // Main App component - completely removed authentication
 export default function App() {
   console.log('App rendering - authentication completely removed');
+  console.log('Using project_id:', schema.project_id);
   
   return (
-    <BasicProvider project_id={schema.project_id} schema={schema} skipAuth={true}>
+    <BasicProvider 
+      project_id={schema.project_id} 
+      schema={schema} 
+      skipAuth={true}
+      onError={(error) => {
+        console.error('BasicProvider error:', error);
+      }}
+    >
       <PaperProvider theme={theme}>
-        <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
           <NavigationContainer>
             <Stack.Navigator 
               initialRouteName="Home"
@@ -67,7 +75,7 @@ export default function App() {
               />
             </Stack.Navigator>
           </NavigationContainer>
-        </SafeAreaProvider>
+        </SafeAreaView>
       </PaperProvider>
     </BasicProvider>
   );

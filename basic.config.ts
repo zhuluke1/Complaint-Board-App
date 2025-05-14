@@ -30,6 +30,6 @@ export const schema = {
       }
     }
   },
-  "version": 1,
+  "version": 2,
   "project_id": "dd2b054f-e8d0-4772-bfa2-e4d427f2b5c6"
 };
