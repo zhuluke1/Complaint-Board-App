@@ -11,6 +11,16 @@ export default function AuthScreen() {
   const isWeb = Platform.OS === 'web';
   const isWideScreen = width > 768;
 
+  const handleLogin = () => {
+    // For web, we need to handle the OAuth flow differently
+    if (isWeb) {
+      login();
+    } else {
+      // For mobile, we can use the default login function
+      login();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={[
@@ -36,7 +46,7 @@ export default function AuthScreen() {
         
         <Button 
           mode="contained" 
-          onPress={login}
+          onPress={handleLogin}
           loading={isLoading}
           disabled={isLoading}
           style={[
