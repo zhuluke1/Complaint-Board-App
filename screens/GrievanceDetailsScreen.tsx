@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, Alert, Platform, useWindowDimensions } from 'react-native';
 import { Text, Card, Button, Divider, ActivityIndicator, Chip } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,9 +25,13 @@ export default function GrievanceDetailsScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { grievanceId } = route.params;
+  const { width } = useWindowDimensions();
   
   const [grievance, setGrievance] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  const isWeb = Platform.OS === 'web';
+  const isWideScreen = width > 768;
 
   useEffect(() => {
     fetchGrievanceDetails();
@@ -127,8 +131,11 @@ export default function GrievanceDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Card style={styles.card}>
+      <ScrollView contentContainerStyle={[
+        styles.scrollContent,
+        isWeb && isWideScreen && styles.webScrollContent
+      ]}>
+        <Card style={[styles.card, isWeb && isWideScreen && styles.webCard]}>
           <Card.Content>
             <Text variant="headlineSmall" style={styles.title}>{grievance.title}</Text>
             
@@ -168,7 +175,10 @@ export default function GrievanceDetailsScreen() {
           </Card.Content>
         </Card>
         
-        <View style={styles.buttonContainer}>
+        <View style={[
+          styles.buttonContainer,
+          isWeb && isWideScreen && styles.webButtonContainer
+        ]}>
           <Button 
             mode="contained" 
             onPress={handleEdit}
@@ -222,8 +232,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
   },
+  webScrollContent: {
+    maxWidth: 800,
+    marginHorizontal: 'auto',
+    width: '100%',
+    paddingTop: 24,
+  },
   card: {
     marginBottom: 16,
+  },
+  webCard: {
+    elevation: 4,
   },
   title: {
     fontWeight: 'bold',
@@ -265,6 +284,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
+  },
+  webButtonContainer: {
+    maxWidth: 400,
+    marginHorizontal: 'auto',
   },
   editButton: {
     flex: 1,

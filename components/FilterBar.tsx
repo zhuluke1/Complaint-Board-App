@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { Chip, Searchbar } from 'react-native-paper';
+import { StyleSheet, View, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import { Chip, Searchbar, Text } from 'react-native-paper';
 
 type FilterBarProps = {
   onFilterChange: (filters: {
@@ -16,6 +16,10 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const { width } = useWindowDimensions();
+  
+  const isWeb = Platform.OS === 'web';
+  const isWideScreen = width > 768;
 
   const statuses = [
     { label: 'Open', value: 'open' },
@@ -86,68 +90,56 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
     updateFilters(query, selectedStatuses, selectedPriorities, selectedCategories);
   };
 
+  // Render filter section with label
+  const renderFilterSection = (title: string, items: { label: string, value: string }[], selectedItems: string[], toggleFn: (value: string) => void) => (
+    <View style={styles.filterSection}>
+      {isWideScreen && <Text variant="bodyMedium" style={styles.filterTitle}>{title}:</Text>}
+      <View style={styles.chipGroup}>
+        {items.map((item) => (
+          <Chip
+            key={item.value}
+            selected={selectedItems.includes(item.value)}
+            onPress={() => toggleFn(item.value)}
+            style={[
+              styles.chip,
+              selectedItems.includes(item.value) && styles.selectedChip
+            ]}
+          >
+            {item.label}
+          </Chip>
+        ))}
+      </View>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
-      <Searchbar
-        placeholder="Search grievances"
-        onChangeText={onChangeSearch}
-        value={searchQuery}
-        style={styles.searchbar}
-      />
+    <View style={[styles.container, isWeb && styles.webContainer]}>
+      <View style={[styles.searchContainer, isWideScreen && { maxWidth: 300 }]}>
+        <Searchbar
+          placeholder="Search grievances"
+          onChangeText={onChangeSearch}
+          value={searchQuery}
+          style={styles.searchbar}
+        />
+      </View>
       
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filtersContainer}
-      >
-        <View style={styles.chipGroup}>
-          {statuses.map((status) => (
-            <Chip
-              key={status.value}
-              selected={selectedStatuses.includes(status.value)}
-              onPress={() => toggleStatus(status.value)}
-              style={[
-                styles.chip,
-                selectedStatuses.includes(status.value) && styles.selectedChip
-              ]}
-            >
-              {status.label}
-            </Chip>
-          ))}
+      {isWideScreen ? (
+        <View style={styles.webFiltersContainer}>
+          {renderFilterSection('Status', statuses, selectedStatuses, toggleStatus)}
+          {renderFilterSection('Priority', priorities, selectedPriorities, togglePriority)}
+          {renderFilterSection('Category', categories, selectedCategories, toggleCategory)}
         </View>
-        
-        <View style={styles.chipGroup}>
-          {priorities.map((priority) => (
-            <Chip
-              key={priority.value}
-              selected={selectedPriorities.includes(priority.value)}
-              onPress={() => togglePriority(priority.value)}
-              style={[
-                styles.chip,
-                selectedPriorities.includes(priority.value) && styles.selectedChip
-              ]}
-            >
-              {priority.label}
-            </Chip>
-          ))}
-        </View>
-        
-        <View style={styles.chipGroup}>
-          {categories.map((category) => (
-            <Chip
-              key={category.value}
-              selected={selectedCategories.includes(category.value)}
-              onPress={() => toggleCategory(category.value)}
-              style={[
-                styles.chip,
-                selectedCategories.includes(category.value) && styles.selectedChip
-              ]}
-            >
-              {category.label}
-            </Chip>
-          ))}
-        </View>
-      </ScrollView>
+      ) : (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersContainer}
+        >
+          {renderFilterSection('', statuses, selectedStatuses, toggleStatus)}
+          {renderFilterSection('', priorities, selectedPriorities, togglePriority)}
+          {renderFilterSection('', categories, selectedCategories, toggleCategory)}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -159,17 +151,39 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
+  webContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  searchContainer: {
+    marginBottom: 8,
+    marginHorizontal: 8,
+  },
   searchbar: {
-    margin: 8,
     elevation: 0,
     backgroundColor: '#f5f5f5',
   },
   filtersContainer: {
     paddingHorizontal: 8,
   },
+  webFiltersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  filterSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+    marginBottom: 8,
+  },
+  filterTitle: {
+    marginRight: 8,
+    fontWeight: 'bold',
+  },
   chipGroup: {
     flexDirection: 'row',
-    marginRight: 16,
+    flexWrap: 'wrap',
   },
   chip: {
     marginHorizontal: 4,

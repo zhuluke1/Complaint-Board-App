@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform, useWindowDimensions } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -18,11 +18,35 @@ export default function EmptyState({
   buttonText,
   onButtonPress,
 }: EmptyStateProps) {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWideScreen = width > 768;
+
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons name={icon} size={80} color="#BDBDBD" />
-      <Text variant="headlineSmall" style={styles.title}>{title}</Text>
-      <Text variant="bodyMedium" style={styles.message}>{message}</Text>
+    <View style={[
+      styles.container,
+      isWeb && isWideScreen && styles.webContainer
+    ]}>
+      <MaterialCommunityIcons 
+        name={icon} 
+        size={isWideScreen ? 120 : 80} 
+        color="#BDBDBD" 
+      />
+      <Text 
+        variant={isWideScreen ? "headlineMedium" : "headlineSmall"} 
+        style={styles.title}
+      >
+        {title}
+      </Text>
+      <Text 
+        variant="bodyMedium" 
+        style={[
+          styles.message,
+          isWeb && isWideScreen && styles.webMessage
+        ]}
+      >
+        {message}
+      </Text>
       {buttonText && onButtonPress && (
         <Button 
           mode="contained" 
@@ -43,6 +67,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
+  webContainer: {
+    padding: 48,
+  },
   title: {
     marginTop: 16,
     fontWeight: 'bold',
@@ -53,6 +80,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
     color: '#757575',
+  },
+  webMessage: {
+    maxWidth: 500,
+    fontSize: 16,
   },
   button: {
     paddingHorizontal: 16,

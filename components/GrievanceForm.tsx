@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
 import { TextInput, Button, Text, SegmentedButtons, Menu } from 'react-native-paper';
 
 type GrievanceFormProps = {
@@ -40,6 +40,10 @@ export default function GrievanceForm({
   
   const [titleError, setTitleError] = useState('');
   const [descriptionError, setDescriptionError] = useState('');
+  
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWideScreen = width > 768;
 
   const categories = [
     'General',
@@ -83,12 +87,18 @@ export default function GrievanceForm({
     }
   };
 
+  // Use KeyboardAvoidingView only on mobile
+  const FormContainer = isWeb ? View : KeyboardAvoidingView;
+  const formContainerProps = isWeb ? {} : {
+    behavior: Platform.OS === 'ios' ? 'padding' : 'height',
+  };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <FormContainer style={styles.container} {...formContainerProps}>
+      <ScrollView contentContainerStyle={[
+        styles.scrollContent,
+        isWeb && isWideScreen && styles.webScrollContent
+      ]}>
         <Text variant="titleLarge" style={styles.formTitle}>
           {isEditing ? 'Edit Grievance' : 'New Grievance'}
         </Text>
@@ -110,7 +120,7 @@ export default function GrievanceForm({
           mode="outlined"
           multiline
           numberOfLines={4}
-          style={styles.input}
+          style={[styles.input, styles.textArea]}
           error={!!descriptionError}
         />
         {descriptionError ? <Text style={styles.errorText}>{descriptionError}</Text> : null}
@@ -180,7 +190,7 @@ export default function GrievanceForm({
           {isEditing ? 'Update Grievance' : 'Submit Grievance'}
         </Button>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </FormContainer>
   );
 }
 
@@ -191,12 +201,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
   },
+  webScrollContent: {
+    maxWidth: 600,
+    marginHorizontal: 'auto',
+    width: '100%',
+    paddingTop: 24,
+  },
   formTitle: {
     marginBottom: 16,
     fontWeight: 'bold',
   },
   input: {
     marginBottom: 8,
+  },
+  textArea: {
+    minHeight: 120,
   },
   errorText: {
     color: 'red',

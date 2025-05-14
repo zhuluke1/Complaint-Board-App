@@ -1,10 +1,10 @@
 import React from 'react';
-import { StyleSheet, StatusBar } from 'react-native';
+import { StyleSheet, StatusBar, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme, adaptNavigationTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { BasicProvider } from '@basictech/expo';
+import { BasicProvider, useBasic } from '@basictech/expo';
 import { schema } from './basic.config';
 
 // Import screens
@@ -27,9 +27,25 @@ const theme = {
   },
 };
 
+// Adapt navigation theme for web
+const { LightTheme } = adaptNavigationTheme({
+  reactNavigationLight: {
+    dark: false,
+    colors: {
+      primary: theme.colors.primary,
+      background: '#f5f5f5',
+      card: theme.colors.primary,
+      text: '#fff',
+      border: 'transparent',
+      notification: theme.colors.error,
+    },
+  },
+});
+
 // Main app content with navigation
 function AppContent() {
   const { isSignedIn, isLoading } = useBasic();
+  const isWeb = Platform.OS === 'web';
 
   if (isLoading) {
     // You could show a splash screen or loading indicator here
@@ -37,7 +53,7 @@ function AppContent() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={isWeb ? LightTheme : undefined}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
@@ -47,6 +63,8 @@ function AppContent() {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
+          // Add animation for web
+          animation: isWeb ? 'fade' : 'default',
         }}
       >
         {!isSignedIn ? (

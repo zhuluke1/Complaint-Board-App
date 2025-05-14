@@ -1,22 +1,32 @@
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View, Image, Platform, useWindowDimensions } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AuthScreen() {
   const { login, isLoading } = useBasic();
+  const { width } = useWindowDimensions();
+  
+  const isWeb = Platform.OS === 'web';
+  const isWideScreen = width > 768;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <View style={[
+        styles.content,
+        isWeb && isWideScreen && styles.webContent
+      ]}>
         <Image 
           source={require('../assets/images/appacella-logo-blue.png')} 
-          style={styles.logo} 
+          style={[
+            styles.logo,
+            isWeb && isWideScreen && styles.webLogo
+          ]} 
           resizeMode="contain"
         />
         
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant={isWideScreen ? "headlineLarge" : "headlineMedium"} style={styles.title}>
           Grievance Board
         </Text>
         
@@ -29,7 +39,10 @@ export default function AuthScreen() {
           onPress={login}
           loading={isLoading}
           disabled={isLoading}
-          style={styles.loginButton}
+          style={[
+            styles.loginButton,
+            isWeb && isWideScreen && styles.webLoginButton
+          ]}
           contentStyle={styles.loginButtonContent}
         >
           Sign in with Kiki Auth
@@ -50,10 +63,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
+  webContent: {
+    maxWidth: 600,
+    marginHorizontal: 'auto',
+  },
   logo: {
     width: 200,
     height: 100,
     marginBottom: 32,
+  },
+  webLogo: {
+    width: 300,
+    height: 150,
   },
   title: {
     fontWeight: 'bold',
@@ -68,6 +89,9 @@ const styles = StyleSheet.create({
   loginButton: {
     width: '100%',
     borderRadius: 8,
+  },
+  webLoginButton: {
+    maxWidth: 300,
   },
   loginButtonContent: {
     paddingVertical: 8,

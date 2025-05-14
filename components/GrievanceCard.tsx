@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
 import { Card, Text, Chip } from 'react-native-paper';
 
 // Define priority and status colors
@@ -40,6 +40,7 @@ export default function GrievanceCard({
 }: GrievanceCardProps) {
   // Format the date
   const formattedDate = new Date(createdAt).toLocaleDateString();
+  const isWeb = Platform.OS === 'web';
   
   // Get status label
   const getStatusLabel = (status: string) => {
@@ -52,8 +53,12 @@ export default function GrievanceCard({
   };
 
   return (
-    <TouchableOpacity onPress={() => onPress(id)}>
-      <Card style={styles.card}>
+    <TouchableOpacity 
+      onPress={() => onPress(id)}
+      style={isWeb ? styles.webCardContainer : null}
+      activeOpacity={0.7}
+    >
+      <Card style={[styles.card, isWeb && styles.webCard]}>
         <Card.Content>
           <Text variant="titleMedium" style={styles.title}>{title}</Text>
           <Text variant="bodyMedium" numberOfLines={2} style={styles.description}>
@@ -90,10 +95,25 @@ export default function GrievanceCard({
 }
 
 const styles = StyleSheet.create({
+  webCardContainer: {
+    marginBottom: 16,
+    height: '100%',
+    display: 'flex',
+  },
   card: {
     marginVertical: 8,
     marginHorizontal: 16,
     elevation: 2,
+  },
+  webCard: {
+    marginHorizontal: 0,
+    height: '100%',
+    transition: '0.3s',
+    // Add hover effect for web
+    ':hover': {
+      transform: [{ translateY: -4 }],
+      boxShadow: '0 6px 12px rgba(0,0,0,0.1)',
+    },
   },
   title: {
     fontWeight: 'bold',

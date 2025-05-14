@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, FlatList, RefreshControl } from 'react-native';
+import { StyleSheet, View, FlatList, RefreshControl, Platform, useWindowDimensions } from 'react-native';
 import { FAB, ActivityIndicator } from 'react-native-paper';
 import { useBasic } from '@basictech/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import FilterBar from '../components/FilterBar';
 export default function HomeScreen() {
   const { db, isSignedIn } = useBasic();
   const navigation = useNavigation();
+  const { width } = useWindowDimensions();
   
   const [grievances, setGrievances] = useState([]);
   const [filteredGrievances, setFilteredGrievances] = useState([]);
@@ -22,6 +23,9 @@ export default function HomeScreen() {
     priority: [],
     category: [],
   });
+
+  const isWeb = Platform.OS === 'web';
+  const isWideScreen = width > 768;
 
   useEffect(() => {
     if (isSignedIn) {
@@ -105,6 +109,32 @@ export default function HomeScreen() {
     navigation.navigate('NewGrievance');
   };
 
+  // For web, we'll use a grid layout for wider screens
+  const renderGridItem = ({ item, index }) => {
+    // Calculate the correct margin based on position
+    const isEven = index % 2 === 0;
+    const marginStyle = isWideScreen ? {
+      marginRight: isEven ? 8 : 0,
+      marginLeft: !isEven ? 8 : 0,
+      width: `${(width > 1200 ? 33.33 : 50) - 2}%`, // Adjust width based on screen size
+    } : {};
+
+    return (
+      <View style={marginStyle}>
+        <GrievanceCard
+          id={item.id}
+          title={item.title}
+          description={item.description}
+          status={item.status}
+          priority={item.priority}
+          category={item.category}
+          createdAt={item.createdAt}
+          onPress={handleGrievancePress}
+        />
+      </View>
+    );
+  };
+
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
@@ -135,19 +165,13 @@ export default function HomeScreen() {
         <FlatList
           data={filteredGrievances}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <GrievanceCard
-              id={item.id}
-              title={item.title}
-              description={item.description}
-              status={item.status}
-              priority={item.priority}
-              category={item.category}
-              createdAt={item.createdAt}
-              onPress={handleGrievancePress}
-            />
-          )}
-          contentContainerStyle={styles.listContent}
+          renderItem={renderGridItem}
+          numColumns={isWeb && isWideScreen ? (width > 1200 ? 3 : 2) : 1}
+          key={isWeb && isWideScreen ? (width > 1200 ? 'three-columns' : 'two-columns') : 'one-column'}
+          contentContainerStyle={[
+            styles.listContent,
+            isWeb && isWideScreen && styles.gridContent
+          ]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -156,7 +180,7 @@ export default function HomeScreen() {
       
       <FAB
         icon="plus"
-        style={styles.fab}
+        style={[styles.fab, isWeb && { bottom: 24, right: 24 }]}
         onPress={handleAddGrievance}
       />
     </SafeAreaView>
@@ -175,6 +199,12 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: 8,
+  },
+  gridContent: {
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   fab: {
     position: 'absolute',
